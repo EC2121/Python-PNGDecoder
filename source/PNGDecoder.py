@@ -19,7 +19,7 @@ def decode(path):
     """
     decodes a png.
     :param p1: the path to the png
-    :return: returns a PNGData which contains it's pixels , width and height
+    :return: returns a PNGData which contains its pixels , width and height
     """
     f = open(path, 'rb')
     acutal_png_signature = f.read(len(__png_signature))
