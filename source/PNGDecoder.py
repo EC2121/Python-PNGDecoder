@@ -7,13 +7,20 @@ __path = 'basn6a08.png'
 __dog_path = 'dog.png'
 
 
-class Texture:
+class PNGData:
     pixels = []
     width = 0
     height = 0
     
 
+
+ 
 def decode(path):
+    """
+    decodes a png.
+    :param p1: the path to the png
+    :return: returns a PNGData which contains it's pixels , width and height
+    """
     f = open(path, 'rb')
     acutal_png_signature = f.read(len(__png_signature))
     if acutal_png_signature != __png_signature:
@@ -27,11 +34,11 @@ def decode(path):
             break
     IHDR_data = __read_IHDR_data(chunks[0])
     pixels = __process_IDAT_chunks(chunks, IHDR_data)
-    texture_data = Texture()
-    texture_data.pixels = pixels
-    texture_data.width = IHDR_data[0]
-    texture_data.height = IHDR_data[1]
-    return texture_data
+    png_data = PNGData()
+    png_data.pixels = pixels
+    png_data.width = IHDR_data[0]
+    png_data.height = IHDR_data[1]
+    return png_data
 
 
 def __process_IDAT_chunks(chunks, IHDR_data):
@@ -51,16 +58,16 @@ def __process_IDAT_chunks(chunks, IHDR_data):
             if filter_type == 0:
                 recon_x = filt_x
             elif filter_type == 1:
-                recon_x = filt_x + recon_a(r, c, recon, stride, bytes_per_pixel)
+                recon_x = filt_x + __recon_a(r, c, recon, stride, bytes_per_pixel)
             elif filter_type == 2:
-                recon_x = filt_x + recon_b(r, c, recon, stride)
+                recon_x = filt_x + __recon_b(r, c, recon, stride)
             elif filter_type == 3:
-                recon_x = filt_x + (recon_a(r, c, recon, stride, bytes_per_pixel) +
-                                    recon_b(r, c, recon, stride)) // 2
+                recon_x = filt_x + (__recon_a(r, c, recon, stride, bytes_per_pixel) +
+                                    __recon_b(r, c, recon, stride)) // 2
             elif filter_type == 4:
-                recon_x = filt_x + __paeth_predictor(recon_a(r, c, recon, stride, bytes_per_pixel),
-                                                  recon_b(r, c, recon, stride),
-                                                  recon_c(r,c,recon,stride,bytes_per_pixel))
+                recon_x = filt_x + __paeth_predictor(__recon_a(r, c, recon, stride, bytes_per_pixel),
+                                                  __recon_b(r, c, recon, stride),
+                                                  __recon_c(r,c,recon,stride,bytes_per_pixel))
             else:
                 print('Unknown filter type')
             recon.append(recon_x & 0xff) 
@@ -122,19 +129,19 @@ def __paeth_predictor(a, b, c):
     return Pr
 
 
-def recon_a(r, c, recon, stride, bytes_per_pixel):
+def __recon_a(r, c, recon, stride, bytes_per_pixel):
     return recon[r * stride + c - bytes_per_pixel] if c >= bytes_per_pixel else 0
 
 
-def recon_b(r, c, recon, stride):
+def __recon_b(r, c, recon, stride):
     return recon[(r-1) * stride + c] if r > 0 else 0
 
 
-def recon_c(r, c, recon,  stride, bytes_per_pixel):
+def __recon_c(r, c, recon,  stride, bytes_per_pixel):
     return recon[(r-1) * stride + c - bytes_per_pixel] if r > 0 and c >= bytes_per_pixel else 0
 
 
 if __name__ == '__main__':
-    my_texture = decode(__dog_path)
-    plt.imshow(np.array(my_texture.pixels).reshape((my_texture.height, my_texture.width, 4)))
+    my_png_data = decode(__dog_path)
+    plt.imshow(np.array(my_png_data.pixels).reshape((my_png_data.height, my_png_data.width, 4)))
     plt.show()
